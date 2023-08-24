@@ -1,0 +1,517 @@
+---
+title             : "The Composite Method Produces High False Positive Rates"
+shorttitle        : "Composite Problems"
+
+author: 
+  - name          : "Lisa DeBruine"
+    affiliation   : "1"
+    corresponding : yes    # Define only one corresponding author
+    address       : "62 Hillhead Street, Glasgow G12 8QB, Scotland"
+    email         : "lisa.debruine@glasgow.ac.uk"
+    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+      - Conceptualization
+      - Funding acquisition
+      - Methodology
+      - Software
+      - Validation
+      - Visualization
+      - Writing - Original Draft Preparation
+
+affiliation:
+  - id            : "1"
+    institution   : "Institute of Neuroscience & Psychology, University of Glasgow"
+
+authornote: |
+  This research was funded by ERC grant #647910 (KINSHIP).
+
+abstract: |
+   In this paper I will explain a serious caveat to research using composite faces to conclude something about group differences from judgements of a single pair or a small number of pairs of composites. Using data simulation, I will demonstrate how this method inevitably leads to a high false positive rate, and how this problem is made worse by using a larger number of raters. I conclude by suggesting alternative methods for assessing the relationship between face morphology and individual traits.
+  
+keywords          : "faces; morphing; composite; average; mixed effects models"
+wordcount         : "X"
+
+bibliography      : ["r-references.bib","biblio.bib"]
+csl               : apa.csl
+floatsintext      : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+linenumbers       : yes
+mask              : no
+draft             : yes
+
+documentclass     : "apa6"
+classoption       : "man"
+output            : 
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    number_sections: false
+    self_contained: false
+    code_folding: show
+note              : "Draft"
+---
+
+```{r setup, include = FALSE}
+# devtools::install_github("crsh/papaja")
+library(papaja) # for manuscript formatting
+library(kableExtra) # for table formatting
+library(dplyr) # for data wrangling
+library(tidyr) # for data wrangling
+library(ggplot2) # for data visualisation
+library(purrr) # for iteration
+library(faux) # for data simulation
+library(broom) # for tidy analyses
+library(glue) # for reproducible text
+
+# devtools::install_github("debruine/webmorphR.stim")
+library(webmorphR) # for reproducible stimuli
+library(webmorphR.stim) # for additional stimuli
+
+# bibliography
+r_refs("r-references.bib", append = FALSE)
+
+knitr::opts_chunk$set(
+  cache       = FALSE,
+  cache.extra = knitr::rand_seed,
+  out.width   = "100%",
+  warning     = FALSE,
+  message     = FALSE,
+  echo        = FALSE
+)
+
+wm_opts(plot.maxwidth = 850)
+faux_options(plot = FALSE)
+theme_set(theme_minimal())
+```
+
+A recent paper by @alper2021all used faces from the Faceaurus database [@holtzman2011facing]. “Holtzman (2011) standardized the assessment scores, computed average scores of self- and peer-reports, and ranked the face images based on the resulting scores. Then, prototypes for each of the personality dimensions were created by digitally combining 10 faces with the highest, and 10 faces with the lowest scores on the personality trait in question (Holtzman, 2011).” This was done separately for male and female faces.
+
+With 105 observers, Holtzman found that the ability to detect the composite higher in a dark triad trait was greater than chance for all three traits for each sex. However, since scores on the three dark triad traits are positively correlated, the three pairs of composite faces are not independent. Indeed, Holtzman states that five individuals were in all three low composites for the male faces, while the overlap was less extreme in other cases. Alper and colleagues replicated these findings in three studies with Ns of 160, 318, and 402, the larger two of which were pre-registered.
+
+While I commend both Holtzman and Alper, Bayrak, and Yilmaz for their transparency, data sharing, and material sharing, I argue that the original test has an effective N of 2, not 105, and that further replications using these images, such as those done by Alper, Bayrak, and Yilmaz, regardless of number of observers or preregistered status, lend no further weight of evidence to the assertion that dark triad traits are visible in physical appearance.
+
+
+## Analogy
+
+To explain why, I'll start with an analogy that has nothing to do with faces (bear with me). Imagine a researcher predicts that women born on odd days are taller than women born on even days. Ridiculous, right? So let's simulate some data assuming that isn't true. The code below samples 20 women from a population with a mean height of 162 cm and a standard deviation of 7 (values for women in Scotland). Half are born on odd days and half on even days.
+
+```{r, echo = TRUE}
+set.seed(42)
+
+stim_n <- 10
+height_m <- 162
+height_sd <- 7
+
+odd <- rnorm(stim_n, height_m, height_sd)
+even <- rnorm(stim_n, height_m, height_sd)
+
+t <- t.test(odd, even, alternative = "greater")
+```
+
+
+```{r, echo = TRUE}
+e <- effectsize::cohens_d(odd, even)
+stats <- glue::glue("$t_{{{apa_num(t$parameter)}}} = {apa_num(t$statistic)}, p = {apa_p(t$p.value)}, d = {apa_num(e$Cohens_d)}$")
+```
+
+A t-test shows no significant difference (`r stats`), which is unsurprising. We simulated the data from the same distribution, so we know for sure there is no real difference here. Now we're going to average the height of the women with odd and even birthdays. So if we create a full-body composite of women born on odd days, she would be `r mean(odd) |> round(1)` cm tall, and a composite of women born on even days would be `r mean(even) |> round(1)` cm tall.
+
+If we ask observers to look at these two composites, side-by-side, and judge which one looks taller, what do you imagine would happen? It's likely that nearly all of them would judge the odd-birthday composite as taller. But let's say that observers have to judge the composites independently, and they are pretty bad with height estimation, so their estimates for each composite have error with a standard deviation of 10 cm. We then compare their estimates for the odd-birthday composite with the estimate for the even-birthday composite in a paired-samples t-test.
+
+```{r, echo = TRUE}
+set.seed(8675309)
+
+obs_n <- 25 # number of observers
+error_sd <- 10 # observer error
+
+# add the error to the composite mean heights
+odd_estimates  <- mean(odd)  + rnorm(obs_n, 0, error_sd)
+even_estimates <- mean(even) + rnorm(obs_n, 0, error_sd)
+
+t <- t.test(odd_estimates, even_estimates, alternative = "greater")
+```
+
+```{r}
+e <- effectsize::cohens_d(odd, even)
+stats <- glue::glue("$t_{{{apa_num(t$parameter)}}} = {apa_num(t$statistic)}, p = {apa_p(t$p.value)}, d = {apa_num(e$Cohens_d)}$")
+```
+
+Now the women with odd birthdays are significantly taller than the women with even birthdays (`r stats`)! 
+
+And if you increase the number of raters, you can virtually guarantee significant results, even for tiny differences or traits that people are very bad at estimating. 
+
+```{r}
+set.seed(8)
+
+x <- data.frame(
+  n = seq(25, 500, 25) |> rep(100)
+) |>
+  mutate(p = map_dbl(n, \(n) {
+    a <- rnorm(n, 0.2)
+    b <- rnorm(n, 0)
+    
+    t.test(a, b, alternative = "greater")$p.value
+  }))
+```
+
+```{r, fig.cap="As you increase the number of raters up to 500, the power to detect a difference with a Cohen's d as small as 0.2 increases to 95%."}
+x |>
+  group_by(n) |>
+  summarise(power = mean(p < .05)) |>
+  ggplot(aes(n, power)) +
+  geom_point(color = "dodgerblue") +
+  geom_smooth(color = "dodgerblue4") +
+  scale_x_continuous(breaks = seq(0, 500, 25)) +
+  scale_y_continuous(breaks = seq(0, 1, .1)) +
+  labs(x = "Number of Raters",
+       y = "Power") +
+  coord_cartesian(ylim = c(0, 1), xlim = c(0, 500))
+```
+
+```{r}
+chance_diff <- data.frame(n = seq(5, 50, 5)) |>
+  mutate(diff = map(n, \(n) {
+    replicate(10000, mean(rnorm(n))-mean(rnorm(n)))
+  })) |>
+  unnest(diff) |>
+  mutate(unsigned = abs(diff))
+```
+
+```{r, fig.cap="Simulated data showing the distribution of effect sizes for the difference between pairs of composite faces sampled from the same distribution (i.e., no real effect). Points show the median unsigned effect size."}
+ggplot(chance_diff, aes(x = n, y = unsigned)) +
+  geom_hline(yintercept = 0, color = "grey70") +
+  geom_violin(aes(group = factor(n), y = diff, fill = n), alpha = 0.5) +
+  stat_summary(geom = "point", fun.y = median) +
+  scale_fill_viridis_c() +
+  scale_x_continuous(breaks = seq(0, 50, 10)) +
+  labs(x = "Number of faces per composite",
+       y = "Effect size of difference between face pairs") +
+  theme(legend.position = "none")
+```
+
+
+
+
+
+## Simulation
+
+Now we can return to the Holtzman example.
+
+```{r}
+# convert lower left triangle to upper right
+m <- matrix(NA, 8, 8)
+m[upper.tri(m, diag = T)] <- c(
+  1.00,
+  0.34, 1.00,
+  0.06, 0.56, 1.00,
+  0.57, 0.40, 0.50, 1.00,
+  0.16, 0.14, 0.41, 0.32, 1.00,
+  0.17, 0.33, 0.56, 0.50, 0.47, 1.00,
+  0.09, 0.33, 0.61, 0.52, 0.48, 0.77, 1.00,
+  0.03, 0.11, 0.26, 0.41, 0.38, 0.43, 0.60, 1.00)
+r_female <- t(m)[lower.tri(m)]
+
+m <- matrix(NA, 8, 8)
+m[upper.tri(m, diag = T)] <- c(
+  1.00,
+  0.05, 1.00,
+  0.32, 0.64, 1.00,
+  0.62, 0.38, 0.53, 1.00,
+  0.22, 0.05, 0.01, 0.03, 1.00,
+  0.06, 0.19, 0.17, 0.12, 0.37, 1.00,
+  0.06, 0.22, 0.08, 0.22, 0.12, 0.75, 1.00,
+  0.12, 0.19, 0.10, 0.13, 0.43, 0.49, 0.36, 1.00)
+r_male <- t(m)[lower.tri(m)]
+```
+
+Simulate 100 datasets of self and peer dark triad scores with the same  structure as the original study. Each simulated dataset will have 48 women and 33 men whose Machiavellian, narcissism, NPD, and psychopathy scores are correlated in the same way as the original study.
+
+```{r}
+nsim <- 100 # number of simulations
+
+# simulate data
+set.seed(8675309)
+dat <- sim_design(
+  n = c(48, 33),
+  between = list(gender = c("female", "male")),
+  within = list(
+    type = c("self", "peer"),
+    trait = c("mach", "narc", "npd", "psycho")
+  ),
+  r = list(female = r_female, male = r_male),
+  dv = "score",
+  empirical = TRUE,
+  long = TRUE,
+  rep = nsim
+)
+```
+
+
+```{r, fig.width = 8, fig.height = 4, fig.cap="Correlation structure of the original data and simulations."}
+get_params(dat$data[[1]], 
+           between = "gender",
+           within = c("type", "trait"), 
+           dv = "score", id = "id") |>
+  select(-mean, -sd, -n) |>
+  pivot_longer(self_mach:peer_psycho) %>%
+  mutate(name = factor(name, rev(levels(.$var)))) |>
+  ggplot(aes(x = var, y = name, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2)), size = 3) +
+  facet_wrap(~gender) +
+  scale_fill_gradient(low = "white", high = "dodgerblue4", 
+                      limits = c(0, 1)) +
+  labs(x = NULL, y = NULL, fill = "Correlation") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+```
+
+Next, calculate the average dark triad score for each subject and create a "dark triad face morphology" score to represent the extent to which each subject's face is perceived as high in dark triad traits. Importantly, in this simulation, the face morphology score will have *zero* correlation to the average dark triad score.
+
+```{r}
+score_r <- 0 # correlation to the dark triad score
+
+set.seed(0)
+df <- dat |>
+  mutate(data = map(data, \(x){
+    face_signal <- x |>
+      group_by(id) |>
+      summarise(dark_triad = mean(score),
+                .groups = "drop") |>
+      mutate(face = rnorm_pre(dark_triad, r = score_r)) |>
+      select(id, face)
+    
+    # average across self- and peer-reports
+    x |>
+      group_by(id, gender, trait) |>
+      summarise(score = mean(score),
+                .groups = "drop") |>
+      left_join(face_signal, by = "id")
+  }))
+```
+
+```{r, fig.cap="There is no systematic relationship between dark triad trait scores and facial morphology across replicates."}
+df |>
+  head(9) |>
+  unnest(cols = data) |>
+  ggplot(aes(x = score, y = face, color = gender)) +
+  geom_point(alpha = 0.25, size = 0.5) +
+  geom_smooth(method = lm, formula = y ~ x) +
+  scale_color_manual(values = c("firebrick", "dodgerblue4")) +
+  labs(x = "Dark Triad Average Trait Score",
+       y = "Dark Triad Face Morphology") +
+    facet_wrap(~rep)
+```
+
+
+Now pick the 10 images with the highest and lowest scores for each trait for each gender and create composites of these images. Since the trait scores are positively correlated, there is likely to be a lot of overlap in the images that go into the three high and three low composites for each gender.
+
+```{r}
+df$ten <- map(df$data, \(dat_avg) {
+  # Pick the top and bottom 10 for each score
+  top_ten <- dat_avg |>
+    group_by(gender, trait) |>
+    slice_max(order_by = score, n = 10) |>
+    ungroup() |>
+    mutate(rank = "top")
+  
+  bot_ten <- dat_avg |>
+    group_by(gender, trait) |>
+    slice_min(order_by = score, n = 10) |>
+    ungroup() |>
+    mutate(rank = "bottom")
+  
+  bind_rows(top_ten, bot_ten)
+})
+
+# average together the score and face morphology value for these groups of 10 faces.
+df$avg <- map(df$ten, \(ten) {
+  ten |>
+    group_by(gender, trait, rank) |>
+    summarise(score = mean(score),
+              face = mean(face),
+              .groups = "drop")
+})
+```
+
+Even though the face attributes that are perceived as higher in dark triad traits are totally unrelated to the scores, the composites will still differ in these traits, some more than others, and half the time in the predicted direction.
+
+```{r, fig.width = 8, fig.height = 4, fig.cap="Differences in average dark triad face morphology between the high and low dark triad trait groups for the first replicate."}
+ggplot(df$avg[[1]], aes(x = rank, y = face, color = trait)) +
+  geom_line(aes(group = c(trait))) +
+  geom_point() +
+  facet_wrap(~gender) +
+  labs(color = "trait")
+```
+
+
+
+```{r}
+
+# Calculate the difference between the face morphology average scores for the top and bottom in each gender/trait combo.
+
+df$diff <- map(df$avg, \(avg) {
+  avg  |>
+    filter(trait != "npd") |>
+    select(-score) |>
+    pivot_wider(names_from = rank, values_from = face) |>
+    mutate(diff = top - bottom)
+})
+```
+
+Following Holtzman, we will simulate raters for each replicate giving -5 to +5 ratings for which face looks more Machiavellian, narcissistic, or psychopathic. <!--Each pairing will be rated twice by each rater.-->
+
+```{r}
+set.seed(42)
+df$raters <- map(df$diff, \(diffs) {
+  sim_design(
+    n = 105,
+    within = list(gender = c("female", "male"),
+                  trait = c("mach", "narc", "psycho")),
+    mu = diffs$diff
+  ) |>
+    mutate(
+      female_mach = norm2trunc(female_mach, -5.49, 5.49, diffs$diff[[1]], 1.5),
+      female_narc = norm2trunc(female_narc, -5.49, 5.49, diffs$diff[[2]], 1.5),
+      female_psycho = norm2trunc(female_psycho, -5.49, 5.49, diffs$diff[[3]], 1.5),
+      male_mach = norm2trunc(male_mach, -5.49, 5.49, diffs$diff[[4]], 1.5),
+      male_narc = norm2trunc(male_narc, -5.49, 5.49, diffs$diff[[5]], 1.5),
+      male_psycho = norm2trunc(male_psycho, -5.49, 5.49, diffs$diff[[6]], 1.5)
+    ) |>
+    mutate(across(female_mach:male_psycho, round)) |>
+    pivot_longer(female_mach:male_psycho, 
+                 names_to = c("gender", "trait"),
+                 names_sep = "_",
+                 values_to = "rating")
+})
+```
+
+By chance alone, some of the values will be significant in the predicted direction.
+
+```{r}
+df$stats <- map(df$raters, \(raters) {
+  raters |>
+    group_by(gender, trait) |>
+    nest() |>
+    mutate(analysis = map(data, \(x) t.test(x$rating, alternative = "greater") |> broom::tidy())) |>
+    select(-data) |>
+    unnest(analysis) 
+})
+  
+```
+
+
+```{r, results='asis'}
+df$stats[[1]] |>
+  select(gender:p.value) |>
+  mutate(sig = p.value < .05) |>
+  mutate(across(where(is.numeric), round, 3)) |>
+  apa_table()
+```
+
+
+```{r, fig.cap=""}
+ggplot(df$raters[[1]], aes(gender, rating, color = trait)) +
+  geom_violin(adjust = 1.5) +
+  stat_summary(size = .25, fun.data = mean_cl_normal,
+               position = position_dodge(width = 0.9)) +
+  geom_hline(yintercept = 0, color = "grey", linewidth = 0.25)
+```
+
+```{r, fig.cap="Distribution of replicates with 0 to 6 significant results in the predicted direction (one-tailed one-sample t-tests with alpha = 0.05)."}
+all_stats <- df |>
+  select(rep, stats) |>
+  unnest() |>
+  select(rep:p.value) |>
+  mutate(sig = p.value < .05) |>
+  mutate(across(where(is.numeric), round, 3))
+
+all_stats |>
+  group_by(rep) |>
+  summarise(sig = sum(sig)) |>
+  ggplot(aes(x = sig)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "dodgerblue") +
+  scale_x_continuous("Number of Significant Tests",
+                     breaks = 0:6) +
+  coord_cartesian(xlim = c(-0.5, 6.5)) +
+  scale_y_continuous("Number of Simulations")
+```
+
+People tend to show high agreement on stereotypical social perceptions from the physical appearance of faces, even when physical appearance is not meaningfully associated with the traits being judged [@todorov2008understanding;@zebrowitz2008social;@jones2021world]. We can be sure that by chance alone, our two composites will be at least slightly different on any measure, even if they are drawn from identical populations. 
+
+```{r}
+x <- replicate(10000, mean(rnorm(10))-mean(rnorm(10)))
+mean_unsigned_diff_10 <- round(mean(abs(x)), 2)
+```
+
+The smaller the number of stimuli that go into each composite, the larger the mean (unsigned) size of this difference. With only 10 stimuli per composite (like the Facesaurus composites), the mean unsigned effect size of the difference between composites from populations with no real difference is `r mean_unsigned_diff_10` (in units of SD of the original trait distribution). If our observers are accurate enough at perceiving this difference, or we run a very large number of observers, we are virtually guaranteed to find significant results every time. Additionally, there is a 50% chance that these results will be in the predicted direction, and this direction will be replicable across different samples of observers for the same image set.
+
+## Implications for Face Research
+
+So what does this mean for studies of the link between personality traits and facial appearance? The analogy with birth date and height holds. As long as there are facial morphologies that are even slightly consistently associated with the *perception* of a trait, then composites will not be identical in that morphology. Thus, even if that morphology is totally unassociated with the trait as measured by, e.g., personality scales or peer report (which is often the case), using the composite rating method will inflate the false positive rate for concluding a difference.  
+
+The smaller the number of stimuli that go into each composite, the greater the chance that they will be visibly different in morphology related to the judgement of interest, just by chance alone. The larger the number of observers or the better observers are at detecting small differences in this morphology, the more likely that "detection" will be significantly above chance. Repeating this with a new set of observers does not increase the amount of evidence you have for the association between the face morphology and the measured trait. You've only measured it once in one population of faces. If observers are your unit of analyses, you are making conclusions about whether the population of observers can detect the difference between your stimuli, you cannot generalise this to new stimulus sets.
+
+## Alternative methods
+
+So how should researchers test for differences in facial appearance between groups? 
+
+### Assessment of individual faces
+
+Assessment of individual face images, combined with mixed effects models [@debruine2021understanding], can allow you to simultaneously account for variance in both observers and stimuli, avoiding the inflated false positives of the composite method (or aggregating ratings). People often use the composite method when they have too many images for any one observer to rate, but cross-classified mixed models can analyse data from counterbalanced trials or randomised subset allocation. 
+
+Another reason to use the composite rating method is when you are not ethically permitted to use individual faces in research, but are ethically permitted to use non-identifiable composite images. In this case, you can generate a large number of random composite pairs to construct the chance distribution. The equivalent to a p-value for this method is the proportion of the randomly paired composites that your target pair has a more extreme result than. While this method is too tedious to use when constructing composite faces manually, scripting allows you to automate such a task.
+
+```{r, echo = TRUE, eval = FALSE}
+set.seed(8675309) # for reproducibility
+
+# load 20 faces
+f <- load_stim_canada("f") |> resize(0.5)
+
+# set to the number of random pairs you want
+n_pairs <- 5
+
+# repeat this code n_pairs times
+pairs <- lapply(1:n_pairs, function (i) {
+  # sample a random 10:10 split
+  rand1 <- sample(names(f), 10)
+  rand2 <- setdiff(names(f), rand1)
+  
+  # create composite images
+  comp1 <- avg(f[rand1])
+  comp2 <- avg(f[rand2])
+  
+  # save images with paired names
+  nm1 <- paste0("img_", i, "_a")
+  nm2 <- paste0("img_", i, "_b")
+  write_stim(comp1, dir = "images/composites", names = nm1)
+  write_stim(comp2, dir = "images/composites", names = nm2)
+})
+```
+
+```{r rand-pair, fig.cap = "Five random pairs of composites from a sample of 20 faces (10 in each composite). Can you spot any differences?"}
+pairs <- read_stim("images/composites/")
+plot(pairs, byrow = FALSE, nrow = 2)
+```
+
+
+
+
+
+### Open Resources
+
+All image sets used in this tutorial are available on a CC-BY license at [figshare](https://figshare.com/search?q=webmorph%20psychomorph) and all software is available open source. The code to reproduce this paper can be found at https://github.com/debruine/composites. 
+
+We used `r cite_r("r-references.bib")` to produce this manuscript.
+
+
+\newpage
+
+## References
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id="refs" custom-style="Bibliography"></div>
+\endgroup
