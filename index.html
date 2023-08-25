@@ -282,215 +282,168 @@ div.tocify {
 <h1 class="title toc-ignore">The Composite Method Produces High False Positive Rates</h1>
 <h4 class="author">Lisa DeBruine</h4>
 <address class="author_afil">
-1<br><a class="author_email" href="mailto:#"><a href="mailto:lisa.debruine@glasgow.ac.uk" class="email">lisa.debruine@glasgow.ac.uk</a></a>
+<a class="author_email" href="mailto:#"><a href="mailto:lisa.debruine@glasgow.ac.uk" class="email">lisa.debruine@glasgow.ac.uk</a></a>
 </address>
 <div class="abstract">
 <p class="abstract">Abstract</p>
-<p>In this paper I will explain a serious caveat to research using composite faces to conclude something about group differences from judgements of a single pair or a small number of pairs of composites. Using data simulation, I will demonstrate how this method inevitably leads to a high false positive rate, and how this problem is made worse by using a larger number of raters. I conclude by suggesting alternative methods for assessing the relationship between face morphology and individual traits.</p>
+<p>Using a single pair or a small number of pairs of composite stimuli to assess the relationship between morphology and other traits is a common method in face research. Here, I use data simulation to demonstrate how this method inevitably leads to a high false positive rate, and how this problem is made worse by using a larger number of raters. I conclude by suggesting alternative methods for assessing the relationship between face morphology and individual traits.</p>
 </div>
 
 </div>
 
 
-<p>A recent paper by <span class="citation">Alper et al. (2021)</span> used faces from the Faceaurus database <span class="citation">(Holtzman, 2011)</span>. “Holtzman (2011) standardized the assessment scores, computed average scores of self- and peer-reports, and ranked the face images based on the resulting scores. Then, prototypes for each of the personality dimensions were created by digitally combining 10 faces with the highest, and 10 faces with the lowest scores on the personality trait in question (Holtzman, 2011).” This was done separately for male and female faces.</p>
-<p>With 105 observers, Holtzman found that the ability to detect the composite higher in a dark triad trait was greater than chance for all three traits for each sex. However, since scores on the three dark triad traits are positively correlated, the three pairs of composite faces are not independent. Indeed, Holtzman states that five individuals were in all three low composites for the male faces, while the overlap was less extreme in other cases. Alper and colleagues replicated these findings in three studies with Ns of 160, 318, and 402, the larger two of which were pre-registered.</p>
-<p>While I commend both Holtzman and Alper, Bayrak, and Yilmaz for their transparency, data sharing, and material sharing, I argue that the original test has an effective N of 2, not 105, and that further replications using these images, such as those done by Alper, Bayrak, and Yilmaz, regardless of number of observers or preregistered status, lend no further weight of evidence to the assertion that dark triad traits are visible in physical appearance.</p>
-<div id="analogy" class="section level2">
-<h2>Analogy</h2>
-<p>To explain why, I’ll start with an analogy that has nothing to do with faces (bear with me). Imagine a researcher predicts that women born on odd days are taller than women born on even days. Ridiculous, right? So let’s simulate some data assuming that isn’t true. The code below samples 20 women from a population with a mean height of 162 cm and a standard deviation of 7 (values for women in Scotland). Half are born on odd days and half on even days.</p>
-<pre class="r"><code>set.seed(42)
-
-stim_n &lt;- 10
-height_m &lt;- 162
-height_sd &lt;- 7
-
-odd &lt;- rnorm(stim_n, height_m, height_sd)
-even &lt;- rnorm(stim_n, height_m, height_sd)
-
-t &lt;- t.test(odd, even, alternative = &quot;greater&quot;)</code></pre>
-<pre class="r"><code>e &lt;- effectsize::cohens_d(odd, even)
-stats &lt;- glue::glue(&quot;$t_{{{apa_num(t$parameter)}}} = {apa_num(t$statistic)}, p = {apa_p(t$p.value)}, d = {apa_num(e$Cohens_d)}$&quot;)</code></pre>
-<p>A t-test shows no significant difference (<span class="math inline">\(t_{13.42} = 1.23, p = .121, d = 0.55\)</span>), which is unsurprising. We simulated the data from the same distribution, so we know for sure there is no real difference here. Now we’re going to average the height of the women with odd and even birthdays. So if we create a full-body composite of women born on odd days, she would be 165.8 cm tall, and a composite of women born on even days would be 160.9 cm tall.</p>
-<p>If we ask observers to look at these two composites, side-by-side, and judge which one looks taller, what do you imagine would happen? It’s likely that nearly all of them would judge the odd-birthday composite as taller. But let’s say that observers have to judge the composites independently, and they are pretty bad with height estimation, so their estimates for each composite have error with a standard deviation of 10 cm. We then compare their estimates for the odd-birthday composite with the estimate for the even-birthday composite in a paired-samples t-test.</p>
-<pre class="r"><code>set.seed(8675309)
-
-obs_n &lt;- 25 # number of observers
-error_sd &lt;- 10 # observer error
-
-# add the error to the composite mean heights
-odd_estimates  &lt;- mean(odd)  + rnorm(obs_n, 0, error_sd)
-even_estimates &lt;- mean(even) + rnorm(obs_n, 0, error_sd)
-
-t &lt;- t.test(odd_estimates, even_estimates, alternative = &quot;greater&quot;)</code></pre>
-<p>Now the women with odd birthdays are significantly taller than the women with even birthdays (<span class="math inline">\(t_{43.06} = 2.41, p = .010, d = 0.55\)</span>)!</p>
-<p>And if you increase the number of raters, you can virtually guarantee significant results, even for tiny differences or traits that people are very bad at estimating.</p>
-<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-6"></span>
-<img src="index_files/figure-html/unnamed-chunk-6-1.png" alt="As you increase the number of raters up to 500, the power to detect a difference with a Cohen's d as small as 0.2 increases to 95%." width="100%" />
+<p>Composite images (also called average or prototype images) can be created by morphing with software such as Psychomorph <span class="citation">(Benson &amp; Perrett, 1991a, 1991b, 1993; Tiddeman et al., 2001)</span> or WebMorph <span class="citation">(DeBruine, 2018, 2022)</span>. They can be a useful way to visualise the differences between groups of images (Figure <a href="#fig:demo-composites">1</a>).</p>
+<div class="figure"><span style="display:block;" id="fig:demo-composites"></span>
+<img src="index_files/figure-html/demo-composites-1.png" alt="Example composite images, each comprising 4 faces of a specific gender and ethnic group." width="100%" />
 <p class="caption">
-Figure 1: As you increase the number of raters up to 500, the power to detect a difference with a Cohen’s d as small as 0.2 increases to 95%.
+Figure 1: Example composite images, each comprising 4 faces of a specific gender and ethnic group.
 </p>
 </div>
+<p>Many studies have used composite images to investigate the link between face morphology and various traits, such as cooperation in an economic game <span class="citation">(Little et al., 2013)</span>, sexual strategies <span class="citation">(Boothroyd et al., 2008)</span>, voice pitch <span class="citation">(Feinberg et al., 2005)</span>, ability to elicit gaze-cueing <span class="citation">(Jones et al., 2011)</span>, or dark triad personality traits <span class="citation">(Alper et al., 2021; Holtzman, 2011)</span>. Typically, a pair of face composites is created from two groups, such as cooperators and defectors in a prisoners’ dilemma game, or faces are rank-ordered on a continuous trait, such as score on a narcissism questionnaire, and some proportion of the top and bottom scorers are averaged together. Then, raters either rate the individual composites or assess which composite in the pair appears higher on some judgement of interest. This judgement can be related to the difference between the composites, such as cooperativeness or narcissism, or it can be another judgement that is hypothesised to be associated with the difference, such as attractiveness or dominance. If one image in the pair is rated significantly higher than the other image on the judgement in question, this is taken as evidence that the trait is associated with face morphology eliciting that judgement.</p>
+<p>Despite its common use in face research, my own past research included, here I argue that this method produces extremely high false positive rates. Under not-unusual conditions, the false positive rate can near 50% for directional hypotheses and 100% for non-directional hypotheses.</p>
+<div id="birthdate-and-height" class="section level2">
+<h2>Birthdate and Height</h2>
+<p>To explain why, I’ll start with an analogy that has nothing to do with faces (bear with me). Imagine a researcher predicts that women born on odd days are taller than women born on even days. Ridiculous, right? So let’s simulate some data assuming that isn’t true (see <a href="https://github.com/debruine/composites" class="uri">https://github.com/debruine/composites</a> for the code used to create the examples in this paper). We will sample 20 women from a population with a mean height of 162 cm and a standard deviation of 7 (values for women in Scotland). Half are born on odd days and half on even days.</p>
+<p>A t-test shows no significant difference (<span class="math inline">\(t_{13.42}\)</span> = 1.23, <span class="math inline">\(p\)</span> = .121, <span class="math inline">\(d\)</span> = 0.55), which is unsurprising. We simulated the data from the same distribution, so we know for sure there is no real difference here.</p>
+<p>Now we’re going to average the height of the women with odd and even birthdays. So if we create a full-body composite of women born on odd days, she would be 165.8 cm tall, and a composite of women born on even days would be 160.9 cm tall. If we ask raters to look at these two composites, side-by-side, and judge which one looks taller, what do you imagine would happen? It’s likely that nearly all of them would judge the odd-birthday composite as taller.</p>
+<p>But let’s say that raters have to judge the composites independently, and they are pretty bad with height estimation, so their estimates for each composite have error with a standard deviation of 10 cm. We can simulate such ratings from 50 raters and then compare the estimates for the odd-birthday composite with the estimates for the even-birthday composite.</p>
+<p>Now the women with odd birthdays are significantly taller than the women with even birthdays (<span class="math inline">\(t_{49}\)</span> = 2.61, <span class="math inline">\(p\)</span> = .006, <span class="math inline">\(d\)</span> = 0.53)! What changed? Essentially, we’re no longer testing whether women born on odd days are taller than those born on even days, but whether raters can perceive the chance difference in height between the pair of composites. As long as there is any difference between the composites that exceeds the perceptual threshold for detection, we can find a significant result with enough raters. The effect has a 50% chance of being in the predicted direction, and whatever result we find with this face pair is likely to be highly replicable in a new set of raters rating the same face pair.</p>
+<p>Maybe this is just a fluke of the original sample? We can repeat the procedure above 10000 times and check the p-values of the individual analysis versus the composite method. We can see that the individual method has the expected uniform distribution of p-values (Figure <a href="#fig:ind-comp">2</a>), as there is no difference between the two groups. The proportion of false positives is 4.97%, which is close to the alpha criterion of 0.05. However, the composite method produced a false positive rate of 18.4% with a directional hypothesis, and 28.1% with a non-directional hypothesis. And as we’ll see later, you can increase the false positive rate to near 50% for directional hypotheses and 100% for non-directional hypotheses by increasing the number of raters.</p>
+<div class="figure"><span style="display:block;" id="fig:ind-comp"></span>
+<img src="index_files/figure-html/ind-comp-1.png" alt="Individual versus composite method. The individual method shows the expected uniform distribution of p-values, while the composite method has an inflated false positive rate." width="100%" />
+<p class="caption">
+Figure 2: Individual versus composite method. The individual method shows the expected uniform distribution of p-values, while the composite method has an inflated false positive rate.
+</p>
+</div>
+</div>
+<div id="simulating-a-real-example" class="section level2">
+<h2>Simulating a Real Example</h2>
+<p>A recent paper by <span class="citation">Alper et al. (2021)</span> used faces from the Faceaurus database <span class="citation">(Holtzman, 2011)</span> to test whether dark triad personality traits (Machiavellianism, narcissism, and psychopathy) are visible in the face. “Holtzman (2011) standardized the assessment scores, computed average scores of self- and peer-reports, and ranked the face images based on the resulting scores. Then, prototypes for each of the personality dimensions were created by digitally combining 10 faces with the highest, and 10 faces with the lowest scores on the personality trait in question (Holtzman, 2011).” This was done separately for male and female faces.</p>
+<p>With 105 raters, Holtzman found that the ability to detect the composite higher in a dark triad trait was greater than chance for all three traits for both genders investigated. Alper and colleagues replicated these findings in three studies with rater numbers of 160, 318, and 402, the larger two of which were pre-registered.</p>
+<p>While I commend both <span class="citation">Holtzman (2011)</span> and <span class="citation">Alper et al. (2021)</span> for their transparency, data sharing, and material sharing, I argue that the original test has an effective N of 2, not 105, and that further replications using these images, regardless of number of raters or preregistered status, lend no further weight of evidence to the assertion that dark triad traits are visible in physical appearance.</p>
+<div id="simulating-rating-data" class="section level3">
+<h3>Simulating Rating Data</h3>
+<p>To explain why, let’s simulate 100 datasets of self- and peer-assesed dark triad scores with the same structure as the original study. Each simulated dataset will have 48 women and 33 men whose Machiavellian, narcissism, NPD, and psychopathy scores are correlated in the same way as <span class="citation">Holtzman (2011)</span>.</p>
 <div class="figure"><span style="display:block;" id="fig:unnamed-chunk-8"></span>
-<img src="index_files/figure-html/unnamed-chunk-8-1.png" alt="Simulated data showing the distribution of effect sizes for the difference between pairs of composite faces sampled from the same distribution (i.e., no real effect). Points show the median unsigned effect size." width="100%" />
-<p class="caption">
-Figure 2: Simulated data showing the distribution of effect sizes for the difference between pairs of composite faces sampled from the same distribution (i.e., no real effect). Points show the median unsigned effect size.
-</p>
-</div>
-</div>
-<div id="simulation" class="section level2">
-<h2>Simulation</h2>
-<p>Now we can return to the Holtzman example.</p>
-<p>Simulate 100 datasets of self and peer dark triad scores with the same structure as the original study. Each simulated dataset will have 48 women and 33 men whose Machiavellian, narcissism, NPD, and psychopathy scores are correlated in the same way as the original study.</p>
-<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-11"></span>
-<img src="index_files/figure-html/unnamed-chunk-11-1.png" alt="Correlation structure of the original data and simulations." width="100%" />
+<img src="index_files/figure-html/unnamed-chunk-8-1.png" alt="Correlation structure of the original data and simulations." width="100%" />
 <p class="caption">
 Figure 3: Correlation structure of the original data and simulations.
 </p>
 </div>
-<p>Next, calculate the average dark triad score for each subject and create a “dark triad face morphology” score to represent the extent to which each subject’s face is perceived as high in dark triad traits. Importantly, in this simulation, the face morphology score will have <em>zero</em> correlation to the average dark triad score.</p>
-<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-13"></span>
-<img src="index_files/figure-html/unnamed-chunk-13-1.png" alt="There is no systematic relationship between dark triad trait scores and facial morphology across replicates." width="100%" />
+</div>
+<div id="simulate-no-relationship" class="section level3">
+<h3>Simulate No Relationship</h3>
+<p>Next, calculate the average dark triad score for each subject and create a “dark triad face morphology” score to represent the extent to which each subject’s face is perceived as high in dark triad traits. Importantly, in this simulation, the face morphology score will have <em>zero</em> correlation to the average dark triad score. Individual samples will, of course, show non-zero correlations between facial morphology and dark triad traits by chance alone, but these will tend to be small and non-directional.</p>
+<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-10"></span>
+<img src="index_files/figure-html/unnamed-chunk-10-1.png" alt="The first 8 simulated replicates, showing no systematic relationship between dark triad trait scores and facial morphology." width="100%" />
 <p class="caption">
-Figure 4: There is no systematic relationship between dark triad trait scores and facial morphology across replicates.
+Figure 4: The first 8 simulated replicates, showing no systematic relationship between dark triad trait scores and facial morphology.
 </p>
 </div>
-<p>Now pick the 10 images with the highest and lowest scores for each trait for each gender and create composites of these images. Since the trait scores are positively correlated, there is likely to be a lot of overlap in the images that go into the three high and three low composites for each gender.</p>
-<p>Even though the face attributes that are perceived as higher in dark triad traits are totally unrelated to the scores, the composites will still differ in these traits, some more than others, and half the time in the predicted direction.</p>
-<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-15"></span>
-<img src="index_files/figure-html/unnamed-chunk-15-1.png" alt="Differences in average dark triad face morphology between the high and low dark triad trait groups for the first replicate." width="100%" />
+</div>
+<div id="create-composites" class="section level3">
+<h3>Create Composites</h3>
+<p>Now pick the 10 images with the highest and lowest scores for each trait for each gender and create composites of these images. However, since scores on the three dark triad traits are positively correlated, the three pairs of composite faces are not independent. Indeed, <span class="citation">Holtzman (2011)</span> states that five individuals were in all three low composites for the male faces, while the overlap was less extreme in other cases.</p>
+<p>Here, we will assume that the face morphology that leads to perceptions of dark triad traits can be linearly combined. Even though this face morphology is totally unrelated to the dark triad personality scores, the composites will still differ in this morphology, some more than others, and half the time in the predicted direction.</p>
+<div class="figure"><span style="display:block;" id="fig:reps-diff"></span>
+<img src="index_files/figure-html/reps-diff-1.png" alt="Differences in average dark triad face morphology between the high and low dark triad trait groups for the first 8 replicates." width="100%" />
 <p class="caption">
-Figure 5: Differences in average dark triad face morphology between the high and low dark triad trait groups for the first replicate.
+Figure 5: Differences in average dark triad face morphology between the high and low dark triad trait groups for the first 8 replicates.
 </p>
 </div>
-<p>Following Holtzman, we will simulate raters for each replicate giving -5 to +5 ratings for which face looks more Machiavellian, narcissistic, or psychopathic. <!--Each pairing will be rated twice by each rater.--></p>
+<div class="figure"><span style="display:block;" id="fig:diff-dist"></span>
+<img src="index_files/figure-html/diff-dist-1.png" alt="The distribution of the difference between high and low composites in average dark triad face morphology, across the 100 replicates. The blue line shows the minumum effect size for which there is 80% power for 105 raters to detect the difference." width="100%" />
+<p class="caption">
+Figure 6: The distribution of the difference between high and low composites in average dark triad face morphology, across the 100 replicates. The blue line shows the minumum effect size for which there is 80% power for 105 raters to detect the difference.
+</p>
+</div>
+</div>
+<div id="simulate-composite-ratings" class="section level3">
+<h3>Simulate Composite Ratings</h3>
+<p>Following Holtzman, we will simulate raters for each replicate giving -5 to +5 ratings for which face in each pair looks more Machiavellian, narcissistic, or psychopathic. Each pairing will be rated twice by each rater.</p>
 <p>By chance alone, some of the values will be significant in the predicted direction.</p>
-<caption>
-<span id="tab:unnamed-chunk-19">Table 1: </span>
-</caption>
-<div custom-style="Table Caption">
-**
-</div>
-<table>
-<thead>
-<tr class="header">
-<th align="left">gender</th>
-<th align="left">trait</th>
-<th align="left">estimate</th>
-<th align="left">statistic</th>
-<th align="left">p.value</th>
-<th align="left">sig</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">female</td>
-<td align="left">mach</td>
-<td align="left">-0.27</td>
-<td align="left">-1.82</td>
-<td align="left">0.96</td>
-<td align="left">FALSE</td>
-</tr>
-<tr class="even">
-<td align="left">female</td>
-<td align="left">narc</td>
-<td align="left">0.22</td>
-<td align="left">1.52</td>
-<td align="left">0.07</td>
-<td align="left">FALSE</td>
-</tr>
-<tr class="odd">
-<td align="left">female</td>
-<td align="left">psycho</td>
-<td align="left">-0.20</td>
-<td align="left">-1.32</td>
-<td align="left">0.90</td>
-<td align="left">FALSE</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-<td align="left">mach</td>
-<td align="left">-0.14</td>
-<td align="left">-0.98</td>
-<td align="left">0.84</td>
-<td align="left">FALSE</td>
-</tr>
-<tr class="odd">
-<td align="left">male</td>
-<td align="left">narc</td>
-<td align="left">0.47</td>
-<td align="left">3.06</td>
-<td align="left">0.00</td>
-<td align="left">TRUE</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-<td align="left">psycho</td>
-<td align="left">0.82</td>
-<td align="left">5.27</td>
-<td align="left">0.00</td>
-<td align="left">TRUE</td>
-</tr>
-</tbody>
-</table>
-<p><img src="index_files/figure-html/unnamed-chunk-20-1.png" width="100%" /></p>
-<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-21"></span>
-<img src="index_files/figure-html/unnamed-chunk-21-1.png" alt="Distribution of replicates with 0 to 6 significant results in the predicted direction (one-tailed one-sample t-tests with alpha = 0.05)." width="100%" />
+<div class="figure"><span style="display:block;" id="fig:unnamed-chunk-16"></span>
+<img src="index_files/figure-html/unnamed-chunk-16-1.png" alt="Distribution of replicates with 0 to 6 significant results in the predicted direction (one-tailed one-sample t-tests with alpha = 0.05)." width="100%" />
 <p class="caption">
-Figure 6: Distribution of replicates with 0 to 6 significant results in the predicted direction (one-tailed one-sample t-tests with alpha = 0.05).
+Figure 7: Distribution of replicates with 0 to 6 significant results in the predicted direction (one-tailed one-sample t-tests with alpha = 0.05).
 </p>
 </div>
 <p>People tend to show high agreement on stereotypical social perceptions from the physical appearance of faces, even when physical appearance is not meaningfully associated with the traits being judged <span class="citation">(Jones et al., 2021; Todorov et al., 2008; Zebrowitz &amp; Montepare, 2008)</span>. We can be sure that by chance alone, our two composites will be at least slightly different on any measure, even if they are drawn from identical populations.</p>
-<p>The smaller the number of stimuli that go into each composite, the larger the mean (unsigned) size of this difference. With only 10 stimuli per composite (like the Facesaurus composites), the mean unsigned effect size of the difference between composites from populations with no real difference is 0.35 (in units of SD of the original trait distribution). If our observers are accurate enough at perceiving this difference, or we run a very large number of observers, we are virtually guaranteed to find significant results every time. Additionally, there is a 50% chance that these results will be in the predicted direction, and this direction will be replicable across different samples of observers for the same image set.</p>
+</div>
+</div>
+<div id="more-raters-is-even-worse" class="section level2">
+<h2>More Raters is Even Worse</h2>
+<p>A naive solution to this problem is to increase the number of raters, which should produce more accurate results, right? Actually, this makes the problem even worse. As you increase the number of raters, the power to detect even small (chance) differences in composites rises (Figure <a href="#fig:power-curves">8</a>). Consequently, you can virtually guarantee significant results, even for tiny differences or traits that people are very bad at estimating.</p>
+<div class="figure"><span style="display:block;" id="fig:power-curves"></span>
+<img src="index_files/figure-html/power-curves-1.png" alt="Power curves for a one-tailed, one-sample t-test." width="100%" />
+<p class="caption">
+Figure 8: Power curves for a one-tailed, one-sample t-test.
+</p>
+</div>
+<p>How likely is it that there will be chance differences in the composites big enough to be a problem? More likely than you probably think, especially when there are a small number of stimuli in each composite. The smaller the number of stimuli that go into each composite, the larger the median (unsigned) size of this difference (Figure <a href="#fig:composite-size">9</a>). With only 10 stimuli per composite (like the Facesaurus composites), the median unsigned effect size of the difference between composites from populations with no real difference is 0.31 (in units of SD of the original trait distribution). If our raters are accurate enough at perceiving this difference, or we run a very large number of raters, we are virtually guaranteed to find significant results every time. There is a 50% chance that these results will be in the predicted direction, and this direction will be replicable across different samples of raters for the same image set.</p>
+<div class="figure"><span style="display:block;" id="fig:composite-size"></span>
+<img src="index_files/figure-html/composite-size-1.png" alt="Simulated data showing the distribution of effect sizes for the difference between pairs of composites sampled from the same distribution (i.e., no real effect). Points show the median unsigned effect size." width="100%" />
+<p class="caption">
+Figure 9: Simulated data showing the distribution of effect sizes for the difference between pairs of composites sampled from the same distribution (i.e., no real effect). Points show the median unsigned effect size.
+</p>
+</div>
 </div>
 <div id="implications-for-face-research" class="section level2">
 <h2>Implications for Face Research</h2>
 <p>So what does this mean for studies of the link between personality traits and facial appearance? The analogy with birth date and height holds. As long as there are facial morphologies that are even slightly consistently associated with the <em>perception</em> of a trait, then composites will not be identical in that morphology. Thus, even if that morphology is totally unassociated with the trait as measured by, e.g., personality scales or peer report (which is often the case), using the composite rating method will inflate the false positive rate for concluding a difference.</p>
-<p>The smaller the number of stimuli that go into each composite, the greater the chance that they will be visibly different in morphology related to the judgement of interest, just by chance alone. The larger the number of observers or the better observers are at detecting small differences in this morphology, the more likely that “detection” will be significantly above chance. Repeating this with a new set of observers does not increase the amount of evidence you have for the association between the face morphology and the measured trait. You’ve only measured it once in one population of faces. If observers are your unit of analyses, you are making conclusions about whether the population of observers can detect the difference between your stimuli, you cannot generalise this to new stimulus sets.</p>
-</div>
-<div id="alternative-methods" class="section level2">
-<h2>Alternative methods</h2>
-<p>So how should researchers test for differences in facial appearance between groups?</p>
+<p>The smaller the number of stimuli that go into each composite, the greater the chance that they will be visibly different in morphology related to the judgement of interest, just by chance alone. The larger the number of raters or the better raters are at detecting small differences in this morphology, the more likely that “detection” will be significantly above chance. Repeating this with a new set of raters does not increase the amount of evidence you have for the association between the face morphology and the measured trait. You’ve only measured it once in one population of faces. If raters are your unit of analyses, you are making conclusions about whether the population of raters can detect the difference between your stimuli, you cannot generalise this to new stimulus sets.</p>
+<p>So how should researchers test for differences in facial appearance between groups? Here I discuss two alternative methods for investigating the relationship between traits and face morphology.</p>
 <div id="assessment-of-individual-faces" class="section level3">
 <h3>Assessment of individual faces</h3>
-<p>Assessment of individual face images, combined with mixed effects models <span class="citation">(L. M. DeBruine &amp; Barr, 2021)</span>, can allow you to simultaneously account for variance in both observers and stimuli, avoiding the inflated false positives of the composite method (or aggregating ratings). People often use the composite method when they have too many images for any one observer to rate, but cross-classified mixed models can analyse data from counterbalanced trials or randomised subset allocation.</p>
-<p>Another reason to use the composite rating method is when you are not ethically permitted to use individual faces in research, but are ethically permitted to use non-identifiable composite images. In this case, you can generate a large number of random composite pairs to construct the chance distribution. The equivalent to a p-value for this method is the proportion of the randomly paired composites that your target pair has a more extreme result than. While this method is too tedious to use when constructing composite faces manually, scripting allows you to automate such a task.</p>
-<pre class="r"><code>set.seed(8675309) # for reproducibility
-
-# load 20 faces
-f &lt;- load_stim_canada(&quot;f&quot;) |&gt; resize(0.5)
-
-# set to the number of random pairs you want
-n_pairs &lt;- 5
-
-# repeat this code n_pairs times
-pairs &lt;- lapply(1:n_pairs, function (i) {
-  # sample a random 10:10 split
-  rand1 &lt;- sample(names(f), 10)
-  rand2 &lt;- setdiff(names(f), rand1)
-  
-  # create composite images
-  comp1 &lt;- avg(f[rand1])
-  comp2 &lt;- avg(f[rand2])
-  
-  # save images with paired names
-  nm1 &lt;- paste0(&quot;img_&quot;, i, &quot;_a&quot;)
-  nm2 &lt;- paste0(&quot;img_&quot;, i, &quot;_b&quot;)
-  write_stim(comp1, dir = &quot;images/composites&quot;, names = nm1)
-  write_stim(comp2, dir = &quot;images/composites&quot;, names = nm2)
-})</code></pre>
+<p>Assessment of individual face images, combined with analysis using mixed effects models, can allow you to simultaneously account for variance in both raters and stimuli, avoiding the inflated false positives of the composite method and the similar problem that occurs when ratings of individual stimuli are averaged before analysis <span class="citation">(Barr, 2007)</span>. People often use the composite method when they have too many images for any one rater to rate, but cross-classified mixed models can analyse data from counterbalanced trials or randomised subset allocation.</p>
+<p>Here we simulate data from a design where 200 faces from two trait groups are rated by 200 raters, in 10 counterbalanced batches, such that each rater only rates 10 faces from each trait group.</p>
+<p>The following mixed effects analysis accounts for the structure of the data above. Each rater does not have to rate each face in order for random effects of face and rater to be accounted for. See <span class="citation">DeBruine &amp; Barr (2021)</span> for further discussion of the benefits of mixed effects models for this type of experimental design.</p>
+<pre><code>## Linear mixed model fit by REML. t-tests use Satterthwaite&#39;s method [
+## lmerModLmerTest]
+## Formula: rating ~ trait + (1 | face) + (1 + trait | rater)
+##    Data: mixed_df
+## 
+## REML criterion at convergence: 17640.8
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -3.3893 -0.6484  0.0019  0.6382  3.5144 
+## 
+## Random effects:
+##  Groups   Name           Variance Std.Dev. Corr
+##  face     (Intercept)    0.9566   0.9781       
+##  rater    (Intercept)    0.9121   0.9550       
+##           trait.high-low 1.0014   1.0007   0.63
+##  Residual                3.8608   1.9649       
+## Number of obs: 4000, groups:  face, 200; rater, 200
+## 
+## Fixed effects:
+##                 Estimate Std. Error        df t value Pr(&gt;|t|)   
+## (Intercept)     -0.06356    0.12672 285.93326  -0.502  0.61635   
+## trait.high-low   0.51804    0.16733 246.90590   3.096  0.00219 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr)
+## trat.hgh-lw -0.400</code></pre>
+</div>
+<div id="random-face-pairs" class="section level3">
+<h3>Random Face Pairs</h3>
+<p>Another reason to use the composite rating method is when you are not ethically permitted to use individual faces in research, but are ethically permitted to use non-identifiable composite images. In this case, you can generate a large number of random composite pairs to construct the chance distribution. The equivalent to a p-value for this method is the proportion of the randomly paired composites that your target pair has a less extreme result than. While this method is too tedious to use when constructing composite faces manually, scripting with webmorphR <span class="citation">(DeBruine, 2022)</span> allows you to automate such a task.</p>
 <div class="figure"><span style="display:block;" id="fig:rand-pair"></span>
 <img src="index_files/figure-html/rand-pair-1.png" alt="Five random pairs of composites from a sample of 20 faces (10 in each composite). Can you spot any differences?" width="100%" />
 <p class="caption">
-Figure 7: Five random pairs of composites from a sample of 20 faces (10 in each composite). Can you spot any differences?
+Figure 10: Five random pairs of composites from a sample of 20 faces (10 in each composite). Can you spot any differences?
 </p>
 </div>
 </div>
-<div id="open-resources" class="section level3">
-<h3>Open Resources</h3>
-<p>All image sets used in this tutorial are available on a CC-BY license at <a href="https://figshare.com/search?q=webmorph%20psychomorph">figshare</a> and all software is available open source. The code to reproduce this paper can be found at <a href="https://github.com/debruine/composites" class="uri">https://github.com/debruine/composites</a>.</p>
-<p>We used R <span class="citation">(Version 4.3.1; R Core Team, 2023)</span> and the R-packages <em>broom</em> <span class="citation">(Version 1.0.5; Robinson et al., 2023)</span>, <em>dplyr</em> <span class="citation">(Version 1.1.2; Wickham, François, et al., 2023)</span>, <em>faux</em> <span class="citation">(Version 1.2.1; L. DeBruine, 2023)</span>, <em>ggplot2</em> <span class="citation">(Version 3.4.2; Wickham, 2016)</span>, <em>glue</em> <span class="citation">(Version 1.6.2; Hester &amp; Bryan, 2022)</span>, <em>kableExtra</em> <span class="citation">(Version 1.3.4; Zhu, 2021)</span>, <em>papaja</em> <span class="citation">(Version 0.1.1; Aust &amp; Barth, 2022)</span>, <em>purrr</em> <span class="citation">(Version 1.0.1; Wickham &amp; Henry, 2023)</span>, <em>tidyr</em> <span class="citation">(Version 1.3.0; Wickham, Vaughan, et al., 2023)</span>, <em>tinylabels</em> <span class="citation">(Version 0.2.3; Barth, 2022)</span>, <em>webmorphR</em> <span class="citation">(Version 0.1.1; L. DeBruine, 2022; L. DeBruine &amp; Jones, 2017)</span>, and <em>webmorphR.stim</em> <span class="citation">(Version 0.0.0.9002; L. DeBruine &amp; Jones, 2017)</span> to produce this manuscript.</p>
-<div style="page-break-after: always;"></div>
 </div>
+<div id="open-resources" class="section level2">
+<h2>Open Resources</h2>
+<p>Face images are from the open-source, CC-BY licensed image set, the Face Research Lab London Set <span class="citation">(DeBruine &amp; Jones, 2017b)</span>. All software is available open source. The code to reproduce this paper can be found at <a href="https://github.com/debruine/composites" class="uri">https://github.com/debruine/composites</a>.</p>
+<p>We used R <span class="citation">(Version 4.3.1; R Core Team, 2023)</span> and the R-packages <em>broom</em> <span class="citation">(Version 1.0.5; Robinson et al., 2023)</span>, <em>dplyr</em> <span class="citation">(Version 1.1.2; Wickham, François, et al., 2023)</span>, <em>faux</em> <span class="citation">(Version 1.2.1; DeBruine, 2023)</span>, <em>ggplot2</em> <span class="citation">(Version 3.4.2; Wickham, 2016)</span>, <em>glue</em> <span class="citation">(Version 1.6.2; Hester &amp; Bryan, 2022)</span>, <em>kableExtra</em> <span class="citation">(Version 1.3.4; Zhu, 2021)</span>, <em>lme4</em> <span class="citation">(Version 1.1.34; Bates et al., 2015)</span>, <em>lmerTest</em> <span class="citation">(Version 3.1.3; Kuznetsova et al., 2017)</span>, <em>Matrix</em> <span class="citation">(Version 1.6.0; Bates et al., 2023)</span>, <em>papaja</em> <span class="citation">(Version 0.1.1; Aust &amp; Barth, 2022)</span>, <em>purrr</em> <span class="citation">(Version 1.0.1; Wickham &amp; Henry, 2023)</span>, <em>pwr</em> <span class="citation">(Version 1.3.0; Champely, 2020)</span>, <em>tidyr</em> <span class="citation">(Version 1.3.0; Wickham, Vaughan, et al., 2023)</span>, <em>tinylabels</em> <span class="citation">(Version 0.2.3; Barth, 2022)</span>, <em>webmorphR</em> <span class="citation">(Version 0.1.1; DeBruine, 2022; DeBruine &amp; Jones, 2017a)</span>, and <em>webmorphR.stim</em> <span class="citation">(Version 0.0.0.9002; DeBruine &amp; Jones, 2017a)</span> to produce this manuscript.</p>
+<div style="page-break-after: always;"></div>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
@@ -501,20 +454,53 @@ Alper, S., Bayrak, F., &amp; Yilmaz, O. (2021). All the dark triad and some of t
 <div id="ref-R-papaja" class="csl-entry">
 Aust, F., &amp; Barth, M. (2022). <em><span class="nocase">papaja</span>: <span>Prepare</span> reproducible <span>APA</span> journal articles with <span>R Markdown</span></em>. <a href="https://github.com/crsh/papaja">https://github.com/crsh/papaja</a>
 </div>
+<div id="ref-barrgeneralizing" class="csl-entry">
+Barr, D. J. (2007). Generalizing over encounters. In <em>The oxford handbook of psycholinguistics</em>. Oxford University Press, USA.
+</div>
 <div id="ref-R-tinylabels" class="csl-entry">
 Barth, M. (2022). <em><span class="nocase">tinylabels</span>: Lightweight variable labels</em>. <a href="https://cran.r-project.org/package=tinylabels">https://cran.r-project.org/package=tinylabels</a>
 </div>
+<div id="ref-R-lme4" class="csl-entry">
+Bates, D., Mächler, M., Bolker, B., &amp; Walker, S. (2015). Fitting linear mixed-effects models using <span class="nocase">lme4</span>. <em>Journal of Statistical Software</em>, <em>67</em>(1), 1–48. <a href="https://doi.org/10.18637/jss.v067.i01">https://doi.org/10.18637/jss.v067.i01</a>
+</div>
+<div id="ref-R-Matrix" class="csl-entry">
+Bates, D., Maechler, M., &amp; Jagan, M. (2023). <em>Matrix: Sparse and dense matrix classes and methods</em>. <a href="https://CRAN.R-project.org/package=Matrix">https://CRAN.R-project.org/package=Matrix</a>
+</div>
+<div id="ref-benson1991perception" class="csl-entry">
+Benson, P. J., &amp; Perrett, D. I. (1991a). Perception and recognition of photographic quality facial caricatures: Implications for the recognition of natural images. <em>European Journal of Cognitive Psychology</em>, <em>3</em>(1), 105–135.
+</div>
+<div id="ref-benson1991synthesising" class="csl-entry">
+Benson, P. J., &amp; Perrett, D. I. (1991b). Synthesising continuous-tone caricatures. <em>Image and Vision Computing</em>, <em>9</em>(2), 123–129.
+</div>
+<div id="ref-benson1993extracting" class="csl-entry">
+Benson, P. J., &amp; Perrett, D. I. (1993). Extracting prototypical facial images from exemplars. <em>Perception</em>, <em>22</em>(3), 257–262.
+</div>
+<div id="ref-Boothroyd2008EHB" class="csl-entry">
+Boothroyd, L. G., Jones, B. C., Burt, D. M., DeBruine, L. M., &amp; Perrett, D. I. (2008). Facial correlates of sociosexuality. <em>Evolution and Human Behavior</em>, <em>29</em>, 211–218. <a href="https://doi.org/10.1016/j.evolhumbehav.2007.12.009">https://doi.org/10.1016/j.evolhumbehav.2007.12.009</a>
+</div>
+<div id="ref-R-pwr" class="csl-entry">
+Champely, S. (2020). <em>Pwr: Basic functions for power analysis</em>. <a href="https://CRAN.R-project.org/package=pwr">https://CRAN.R-project.org/package=pwr</a>
+</div>
+<div id="ref-webmorph" class="csl-entry">
+DeBruine, L. M. (2018). <em>Webmorph: Beta release 2</em> (Version v0.0.0.9001). Zenodo. <a href="https://doi.org/10.5281/zenodo.1162670">https://doi.org/10.5281/zenodo.1162670</a>
+</div>
 <div id="ref-R-webmorphR" class="csl-entry">
-DeBruine, L. (2022). <em>webmorphR: Reproducible stimuli</em>. <a href="https://CRAN.R-project.org/package=webmorphR">https://CRAN.R-project.org/package=webmorphR</a>
+DeBruine, L. M. (2022). <em>webmorphR: Reproducible stimuli</em>. <a href="https://CRAN.R-project.org/package=webmorphR">https://CRAN.R-project.org/package=webmorphR</a>
 </div>
 <div id="ref-R-faux" class="csl-entry">
-DeBruine, L. (2023). <em>Faux: Simulation for factorial designs</em>. Zenodo. <a href="https://doi.org/10.5281/zenodo.2669586">https://doi.org/10.5281/zenodo.2669586</a>
+DeBruine, L. M. (2023). <em>Faux: Simulation for factorial designs</em>. Zenodo. <a href="https://doi.org/10.5281/zenodo.2669586">https://doi.org/10.5281/zenodo.2669586</a>
 </div>
 <div id="ref-debruine2021understanding" class="csl-entry">
 DeBruine, L. M., &amp; Barr, D. J. (2021). Understanding mixed-effects models through data simulation. <em>Advances in Methods and Practices in Psychological Science</em>, <em>4</em>(1), 2515245920965119.
 </div>
 <div id="ref-R-webmorphR.stim" class="csl-entry">
-DeBruine, L., &amp; Jones, B. (2017). <em>Face research lab london set</em>. figshare. <a href="https://doi.org/10.6084/m9.figshare.5047666.v5">https://doi.org/10.6084/m9.figshare.5047666.v5</a>
+DeBruine, L. M., &amp; Jones, B. C. (2017a). <em>Face research lab london set</em>. figshare. <a href="https://doi.org/10.6084/m9.figshare.5047666.v5">https://doi.org/10.6084/m9.figshare.5047666.v5</a>
+</div>
+<div id="ref-FRL_London" class="csl-entry">
+DeBruine, L. M., &amp; Jones, B. C. (2017b). <em>Face research lab london set</em>. figshare. <a href="https://doi.org/10.6084/m9.figshare.5047666.v5">https://doi.org/10.6084/m9.figshare.5047666.v5</a>
+</div>
+<div id="ref-Feinberg2005AB" class="csl-entry">
+Feinberg, D. R., Jones, B. C., Little, A. C., Burt, D. M., &amp; Perrett, D. I. (2005). Manipulation of fundamental and formant frequencies influence the attractiveness of human male voices. <em>Animal Behaviour</em>, <em>69</em>, 561–568. <a href="https://doi.org/10.1016/j.anbehav.2004.06.012">https://doi.org/10.1016/j.anbehav.2004.06.012</a>
 </div>
 <div id="ref-R-glue" class="csl-entry">
 Hester, J., &amp; Bryan, J. (2022). <em>Glue: Interpreted string literals</em>. <a href="https://CRAN.R-project.org/package=glue">https://CRAN.R-project.org/package=glue</a>
@@ -525,11 +511,23 @@ Holtzman, N. S. (2011). Facing a psychopath: Detecting the dark triad from emoti
 <div id="ref-jones2021world" class="csl-entry">
 Jones, B. C., DeBruine, L. M., Flake, J. K., Liuzza, M. T., Antfolk, J., Arinze, N. C., Ndukaihe, I. L. G., Bloxsom, N. G., Lewis, S. C., Foroni, F., et al. (2021). To which world regions does the valence–dominance model of social perception apply? <em>Nature Human Behaviour</em>, <em>5</em>(1), 159–169.
 </div>
+<div id="ref-Jones2011SJP" class="csl-entry">
+Jones, B. C., Main, J. C., Little, A. C., &amp; DeBruine, L. M. (2011). <a href="">Further evidence that facial cues of dominance modulate gaze-cuing in human observers</a>. <em>Swiss Journal of Psychology</em>, <em>70</em>, 193–197.
+</div>
+<div id="ref-R-lmerTest" class="csl-entry">
+Kuznetsova, A., Brockhoff, P. B., &amp; Christensen, R. H. B. (2017). <span class="nocase">lmerTest</span> package: Tests in linear mixed effects models. <em>Journal of Statistical Software</em>, <em>82</em>(13), 1–26. <a href="https://doi.org/10.18637/jss.v082.i13">https://doi.org/10.18637/jss.v082.i13</a>
+</div>
+<div id="ref-Little2013PID" class="csl-entry">
+Little, A. C., Jones, B. C., DeBruine, L. M., &amp; Dunbar, R. I. M. (2013). Accuracy in discrimination of self-reported cooperators using static facial information. <em>Personality and Individual Differences</em>, <em>54</em>, 507–512. <a href="https://doi.org/10.1016/j.paid.2012.10.018">https://doi.org/10.1016/j.paid.2012.10.018</a>
+</div>
 <div id="ref-R-base" class="csl-entry">
 R Core Team. (2023). <em>R: A language and environment for statistical computing</em>. R Foundation for Statistical Computing. <a href="https://www.R-project.org/">https://www.R-project.org/</a>
 </div>
 <div id="ref-R-broom" class="csl-entry">
 Robinson, D., Hayes, A., &amp; Couch, S. (2023). <em>Broom: Convert statistical objects into tidy tibbles</em>. <a href="https://CRAN.R-project.org/package=broom">https://CRAN.R-project.org/package=broom</a>
+</div>
+<div id="ref-tiddeman2001prototyping" class="csl-entry">
+Tiddeman, B. P., Burt, D. M., &amp; Perrett, D. I. (2001). Prototyping and transforming facial textures for perception research. <em>IEEE Computer Graphics and Applications</em>, <em>21</em>(5), 42–50.
 </div>
 <div id="ref-todorov2008understanding" class="csl-entry">
 Todorov, A., Said, C. P., Engell, A. D., &amp; Oosterhof, N. N. (2008). Understanding evaluation of faces on social dimensions. <em>Trends in Cognitive Sciences</em>, <em>12</em>(12), 455–460.
@@ -592,7 +590,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeCodeFolding("show" === "show");
+  window.initializeCodeFolding("hide" === "show");
 });
 </script>
 
